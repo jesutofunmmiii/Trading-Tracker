@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ── Design tokens ──────────────────────────────────────────────────────────
+   Mission-control palette: deep navy backgrounds, gold accents, clean whites.
+   Tailwind v4 registers these via @theme so they're available as utility
+   classes (e.g. bg-navy-900, text-gold-400, border-surface-200).
+─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Navy — primary surfaces and backgrounds */
+  --color-navy-950: #060e1f;
+  --color-navy-900: #0a1628;
+  --color-navy-800: #112035;
+  --color-navy-700: #1b2f4a;
+  --color-navy-600: #253f61;
+  --color-navy-500: #2f5078;
+  --color-navy-400: #3d6494;
+  --color-navy-300: #5a7faa;
+  --color-navy-200: #839ec0;
+  --color-navy-100: #b4c5d8;
+  --color-navy-50:  #e8eef5;
+
+  /* Gold — accent, CTAs, highlights, active states */
+  --color-gold-600: #9a7520;
+  --color-gold-500: #c9a84c;
+  --color-gold-400: #d4b565;
+  --color-gold-300: #dfc47e;
+  --color-gold-200: #ead3a3;
+  --color-gold-100: #f3e6c8;
+  --color-gold-50:  #faf5e9;
+
+  /* Surface — white and soft grays for cards/panels */
+  --color-surface:     #ffffff;
+  --color-surface-50:  #f8f9fb;
+  --color-surface-100: #f1f3f7;
+  --color-surface-200: #e3e7ef;
+  --color-surface-300: #ccd2df;
+  --color-surface-400: #9aa5b8;
+  --color-surface-500: #6b7a96;
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+/* ── Base styles ─────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-navy-900);
+  color: var(--color-navy-50);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar styling (webkit) ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-navy-800);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-navy-600);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-navy-500);
+}
