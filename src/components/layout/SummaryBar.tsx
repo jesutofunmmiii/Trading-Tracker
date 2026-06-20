@@ -78,9 +78,7 @@ function ProfileEditModal({
   onSubmit: (values: ProfileFormValues) => void;
   onClose: () => void;
 }) {
-  const [windowStart, setWindowStart] = useState(
-    profile?.window_start ?? ""
-  );
+  const [windowStart, setWindowStart] = useState(profile?.window_start ?? "");
   const [totalCapital, setTotalCapital] = useState(
     profile != null ? String(profile.total_capital) : "0"
   );
@@ -196,32 +194,51 @@ function ProfileEditModal({
 }
 
 // ── Stat chip ─────────────────────────────────────────────────────────────────
+// When onClick is provided the chip becomes a button; the value gets a
+// dashed underline on hover so it's obvious the number is editable.
 
 function Stat({
   icon,
   label,
   value,
   faded,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   faded?: boolean;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="flex items-center gap-1.5 text-sm">
+  const inner = (
+    <>
       <span className="text-gold-500">{icon}</span>
       <span className="text-navy-400">{label}:</span>
       <span
         className={cn(
-          "font-medium tabular-nums",
-          faded ? "text-navy-500" : "text-navy-100"
+          "font-medium tabular-nums transition-colors",
+          faded ? "text-navy-500" : "text-navy-100",
+          onClick && !faded && "group-hover:text-gold-300 group-hover:underline group-hover:decoration-dotted group-hover:underline-offset-2"
         )}
       >
         {value}
       </span>
-    </div>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        title="Click to edit"
+        className="group flex items-center gap-1.5 text-sm"
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return <div className="flex items-center gap-1.5 text-sm">{inner}</div>;
 }
 
 // ── SummaryBar ────────────────────────────────────────────────────────────────
@@ -276,6 +293,11 @@ export function SummaryBar() {
     },
   });
 
+  function openModal() {
+    setMutationError(null);
+    setShowModal(true);
+  }
+
   // ── Computed stats ──────────────────────────────────────────────────────────
   const loading = profileLoading || milestonesLoading;
 
@@ -296,17 +318,18 @@ export function SummaryBar() {
       ? computeDaysRemaining(profile.window_start)
       : null;
 
-  const capitalStr =
-    profile != null ? fmtCapital(profile.total_capital) : null;
+  const capitalStr = profile != null ? fmtCapital(profile.total_capital) : null;
 
-  // Stats are "faded" when still loading or genuinely unset
-  const statFaded = loading;
+  // "Needs setup" = profile loaded but capital hasn't been set yet (still $0 default).
+  // Drives the more prominent gold "Set up" CTA vs the subtle "Edit" button.
+  const needsSetup = !loading && profile != null && profile.total_capital === 0;
 
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-navy-700 bg-navy-900/95 backdrop-blur-sm">
         <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-4">
+
             {/* Brand */}
             <div className="shrink-0">
               <span className="text-sm font-bold uppercase tracking-wider text-gold-400">
@@ -314,26 +337,24 @@ export function SummaryBar() {
               </span>
             </div>
 
-            {/* Summary stats — desktop */}
-            <div className="hidden items-center gap-6 md:flex">
+            {/* Summary stats — desktop only */}
+            <div className="hidden items-center gap-5 md:flex">
               <Stat
                 icon={<Layers className="h-3.5 w-3.5" />}
                 label="Stage"
-                value={
-                  loading
-                    ? "—"
-                    : currentStage != null
-                    ? `Stage ${currentStage}`
-                    : "—"
-                }
-                faded={statFaded || currentStage == null}
+                value={loading ? "—" : currentStage != null ? `Stage ${currentStage}` : "—"}
+                faded={loading || currentStage == null}
               />
+
+              {/* Capital — clicking opens the editor directly */}
               <Stat
                 icon={<TrendingUp className="h-3.5 w-3.5" />}
                 label="Capital"
                 value={loading ? "—" : capitalStr ?? "—"}
-                faded={statFaded || capitalStr == null}
+                faded={loading || capitalStr == null}
+                onClick={loading ? undefined : openModal}
               />
+
               <Stat
                 icon={<Target className="h-3.5 w-3.5" />}
                 label="Milestones"
@@ -344,37 +365,55 @@ export function SummaryBar() {
                     ? `${milestonesCompleted} / ${totalMilestones}`
                     : "—"
                 }
-                faded={statFaded || milestonesCompleted == null}
+                faded={loading || milestonesCompleted == null}
               />
+
+              {/* Days remaining — clicking opens the editor directly */}
               <Stat
                 icon={<Calendar className="h-3.5 w-3.5" />}
                 label="Days remaining"
-                value={
-                  loading
-                    ? "—"
-                    : daysLeft != null
-                    ? daysLeft.toLocaleString("en-US")
-                    : "—"
-                }
-                faded={statFaded || daysLeft == null}
+                value={loading ? "—" : daysLeft != null ? daysLeft.toLocaleString("en-US") : "—"}
+                faded={loading || daysLeft == null}
+                onClick={loading ? undefined : openModal}
               />
+
+              {/* Divider */}
+              <div className="h-4 w-px bg-navy-700" aria-hidden />
+
+              {/* Edit / Set up button — visible in stats row on desktop */}
+              <button
+                onClick={openModal}
+                className={cn(
+                  "flex items-center gap-1.5 rounded border px-2.5 py-1 text-xs font-medium transition-colors",
+                  needsSetup
+                    ? "border-gold-500/60 bg-gold-500/10 text-gold-400 hover:bg-gold-500/20 hover:border-gold-500"
+                    : "border-navy-600 text-navy-300 hover:border-gold-500/40 hover:text-gold-400"
+                )}
+              >
+                <Pencil className="h-3 w-3" />
+                {needsSetup ? "Set up" : "Edit"}
+              </button>
             </div>
 
-            {/* Right: edit button + UserMenu */}
-            <div className="flex shrink-0 items-center gap-1.5">
+            {/* Right: mobile edit button + UserMenu */}
+            <div className="flex shrink-0 items-center gap-2">
+              {/* Mobile-only edit button (stats row is hidden on small screens) */}
               <button
-                onClick={() => {
-                  setMutationError(null);
-                  setShowModal(true);
-                }}
-                className="rounded p-1.5 text-navy-400 transition-colors hover:bg-navy-800 hover:text-gold-400"
+                onClick={openModal}
+                className={cn(
+                  "flex items-center gap-1.5 rounded border px-2.5 py-1 text-xs font-medium transition-colors md:hidden",
+                  needsSetup
+                    ? "border-gold-500/60 bg-gold-500/10 text-gold-400 hover:bg-gold-500/20"
+                    : "border-navy-600 text-navy-300 hover:border-gold-500/40 hover:text-gold-400"
+                )}
                 aria-label="Edit start date and capital"
-                title="Edit start date & capital"
               >
-                <Pencil className="h-3.5 w-3.5" />
+                <Pencil className="h-3 w-3" />
+                {needsSetup ? "Set up" : "Edit"}
               </button>
               <UserMenu />
             </div>
+
           </div>
         </div>
       </header>
