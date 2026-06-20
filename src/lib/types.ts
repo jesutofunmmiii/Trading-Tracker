@@ -16,3 +16,12 @@ export interface Milestone {
   created_at: string;
   updated_at: string;
 }
+
+export interface Profile {
+  id: string;
+  user_id: string;
+  window_start: string; // ISO date "YYYY-MM-DD"
+  total_capital: number;
+  created_at: string;
+  updated_at: string;
+}
