@@ -1,8 +1,8 @@
 // Data sources: profile (window_start, total_capital), milestones (status counts)
 // This component is intentionally static for now — data wiring comes in a later section.
 
-import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, Calendar, Layers } from "lucide-react";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 export function SummaryBar() {
   return (
@@ -40,10 +40,10 @@ export function SummaryBar() {
             />
           </div>
 
-          {/* Status pill */}
-          <Badge variant="navy" className="shrink-0 hidden sm:inline-flex">
-            No data yet
-          </Badge>
+          {/* User menu + sign out */}
+          <div className="shrink-0">
+            <UserMenu />
+          </div>
         </div>
       </div>
     </header>
