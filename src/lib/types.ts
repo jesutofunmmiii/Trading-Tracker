@@ -25,3 +25,21 @@ export interface Profile {
   created_at: string;
   updated_at: string;
 }
+
+export interface RoutineItem {
+  id: string;
+  order_index: number;
+  title: string;
+  created_at: string;
+}
+
+export interface RoutineCompletion {
+  id: string;
+  user_id: string;
+  routine_item_id: string;
+  completion_date: string; // YYYY-MM-DD (browser local date)
+  completed: boolean;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
