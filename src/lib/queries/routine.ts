@@ -17,6 +17,8 @@ export function localDateStr(d: Date): string {
 export const routineKeys = {
   items: ["routine", "items"] as const,
   completions: (days: number) => ["routine", "completions", days] as const,
+  completionsByMonth: (year: number, month: number) =>
+    ["routine", "completions", "month", year, month] as const,
 };
 
 export async function fetchRoutineItems(): Promise<RoutineItem[]> {
@@ -40,6 +42,23 @@ export async function fetchRecentCompletions(days: number): Promise<RoutineCompl
     .select("*")
     .gte("completion_date", cutoffStr)
     .order("completion_date", { ascending: false });
+  if (error) throw new Error(`Failed to load completions: ${error.message}`);
+  return (data ?? []) as RoutineCompletion[];
+}
+
+export async function fetchCompletionsForMonth(
+  year: number,
+  month: number // 1-based
+): Promise<RoutineCompletion[]> {
+  const supabase = createClient();
+  const from = `${year}-${String(month).padStart(2, "0")}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const to = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  const { data, error } = await supabase
+    .from("routine_completions")
+    .select("*")
+    .gte("completion_date", from)
+    .lte("completion_date", to);
   if (error) throw new Error(`Failed to load completions: ${error.message}`);
   return (data ?? []) as RoutineCompletion[];
 }
