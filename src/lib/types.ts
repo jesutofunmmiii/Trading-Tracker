@@ -26,6 +26,21 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface PremarketEntry {
+  id: string;
+  user_id: string;
+  entry_date: string;           // YYYY-MM-DD (browser local date)
+  market_conditions: string | null;
+  key_levels: string | null;
+  planned_trades: string | null;
+  risk_reward_ratio: string | null;
+  notes: string | null;
+  attachment_url: string | null;
+  attachment_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface RoutineItem {
   id: string;
   order_index: number;
