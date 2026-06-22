@@ -672,7 +672,7 @@ export function RoutineSection() {
           </div>
 
           {/* Weekday headers */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1.5">
             {DAYS_OF_WEEK.map((dow) => (
               <div key={dow} className="py-1 text-center font-mono text-[10px] font-medium uppercase tracking-wider text-navy-600">
                 {dow}
@@ -687,7 +687,7 @@ export function RoutineSection() {
               Loading…
             </div>
           ) : (
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1.5">
               {buildCalendarGrid(calYear, calMonth).map((day, idx) => {
                 if (day === null) {
                   return <div key={`empty-${idx}`} />;
@@ -701,6 +701,9 @@ export function RoutineSection() {
                 const allDone = completedCount > 0 && completedCount >= items.length;
                 const hasAny = completedCount > 0;
                 const isSelected = selectedDate === dateStr;
+                const ringR = 13;
+                const ringCirc = 2 * Math.PI * ringR;
+                const fraction = items.length > 0 ? completedCount / items.length : 0;
 
                 return (
                   <button
@@ -710,7 +713,7 @@ export function RoutineSection() {
                     aria-label={`${dateStr}${completedCount > 0 ? `, ${completedCount}/${items.length} completed` : ""}`}
                     aria-pressed={isSelected}
                     className={cn(
-                      "min-h-[44px] rounded-lg border p-1.5 text-left transition-all duration-150",
+                      "relative aspect-square w-full rounded-lg border transition-all duration-150 focus-visible:outline-none",
                       isFuture
                         ? "cursor-not-allowed border-navy-800/50 bg-navy-800/20 opacity-35"
                         : isSelected
@@ -724,20 +727,50 @@ export function RoutineSection() {
                         : "cursor-pointer border-navy-700 bg-navy-800/50 hover:bg-navy-700/60"
                     )}
                   >
-                    <span className={cn(
-                      "block font-mono text-xs font-semibold leading-none",
-                      isToday ? "text-gold-300" : isSelected ? "text-gold-200" : "text-navy-300"
-                    )}>
+                    {/* Circular progress ring — fills the cell */}
+                    <svg
+                      viewBox="0 0 36 36"
+                      className="absolute inset-0 h-full w-full"
+                      aria-hidden="true"
+                      style={{ transform: "rotate(-90deg)" }}
+                    >
+                      {/* Track */}
+                      <circle
+                        cx="18" cy="18" r={ringR}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        className={isFuture ? "text-navy-800/40" : "text-navy-700/50"}
+                      />
+                      {/* Progress arc — only rendered when there is data */}
+                      {hasAny && (
+                        <circle
+                          cx="18" cy="18" r={ringR}
+                          fill="none"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeDasharray={ringCirc}
+                          strokeDashoffset={ringCirc * (1 - fraction)}
+                          stroke="currentColor"
+                          className={allDone ? "text-emerald-400" : "text-gold-500/60"}
+                        />
+                      )}
+                    </svg>
+                    {/* Day number — centered inside the ring */}
+                    <span
+                      className={cn(
+                        "absolute inset-0 flex items-center justify-center font-mono text-[11px] font-bold leading-none",
+                        isFuture
+                          ? "text-navy-700"
+                          : isToday
+                          ? "text-gold-300"
+                          : isSelected
+                          ? "text-gold-200"
+                          : "text-navy-300"
+                      )}
+                    >
                       {day}
                     </span>
-                    {hasAny && (
-                      <span className={cn(
-                        "mt-1 block text-[9px] font-medium leading-none",
-                        allDone ? "text-emerald-400" : "text-navy-500"
-                      )}>
-                        {completedCount}/{items.length}
-                      </span>
-                    )}
                   </button>
                 );
               })}
