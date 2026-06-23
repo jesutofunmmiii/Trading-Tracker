@@ -31,6 +31,7 @@ export interface PremarketEntry {
   user_id: string;
   entry_date: string; // YYYY-MM-DD
   news_events: unknown | null; // JSONB — shape TBD when data source wired
+  daily_notes: string | null;
   created_at: string;
   updated_at: string;
 }

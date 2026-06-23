@@ -155,3 +155,47 @@ export async function deletePremarketScreenshot(
     .eq("id", screenshotId);
   if (error) throw new Error(`Failed to delete screenshot: ${error.message}`);
 }
+
+// Deletes a batch of screenshots (e.g. all shots in a timeframe).
+// Storage removals run in parallel best-effort; DB rows deleted in a single .in() call.
+export async function deleteMultipleScreenshots(
+  shots: PremarketScreenshot[]
+): Promise<void> {
+  if (shots.length === 0) return;
+  const supabase = createClient();
+  await Promise.allSettled(
+    shots.map((s) => supabase.storage.from(BUCKET).remove([s.storage_path]))
+  );
+  const ids = shots.map((s) => s.id);
+  const { error } = await supabase
+    .from("premarket_screenshots")
+    .delete()
+    .in("id", ids);
+  if (error) throw new Error(`Failed to delete screenshots: ${error.message}`);
+}
+
+// Saves the "Thoughts for the day?" notes on the premarket_entry for a date.
+// Upserts the entry (creating it if it doesn't exist yet) with daily_notes set.
+export async function saveDailyNotes(
+  date: string,
+  notes: string
+): Promise<PremarketEntry> {
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) throw new Error("Not authenticated");
+
+  const { data: entry, error } = await supabase
+    .from("premarket_entries")
+    .upsert(
+      { user_id: user.id, entry_date: date, daily_notes: notes.trim() || null },
+      { onConflict: "user_id,entry_date" }
+    )
+    .select()
+    .single();
+  if (error || !entry)
+    throw new Error(`Failed to save notes: ${error?.message ?? "unknown"}`);
+  return entry as PremarketEntry;
+}

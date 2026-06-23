@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Sun,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,9 @@ export function JournalSection() {
   const [calYear, setCalYear] = useState(todayYear);
   const [calMonth, setCalMonth] = useState(todayMonth);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedPanel, setSelectedPanel] = useState<
+    "premarket" | "postmarket" | null
+  >(null);
 
   const atCurrentMonth = calYear === todayYear && calMonth === todayMonth;
 
@@ -87,6 +91,7 @@ export function JournalSection() {
   // ── Month navigation ───────────────────────────────────────────────────────
   function prevMonth() {
     setSelectedDate(null);
+    setSelectedPanel(null);
     if (calMonth === 1) { setCalYear((y) => y - 1); setCalMonth(12); }
     else setCalMonth((m) => m - 1);
   }
@@ -94,6 +99,7 @@ export function JournalSection() {
   function nextMonth() {
     if (atCurrentMonth) return;
     setSelectedDate(null);
+    setSelectedPanel(null);
     if (calMonth === 12) { setCalYear((y) => y + 1); setCalMonth(1); }
     else setCalMonth((m) => m + 1);
   }
@@ -191,11 +197,12 @@ export function JournalSection() {
               return (
                 <button
                   key={dateStr}
-                  onClick={() =>
-                    !isFuture &&
-                    setSelectedDate((prev) => (prev === dateStr ? null : dateStr))
-                  }
-                  disabled={isFuture}
+                  onClick={() => {
+                    if (isFuture) return;
+                    const next = selectedDate === dateStr ? null : dateStr;
+                    setSelectedDate(next);
+                    setSelectedPanel(null);
+                  }}
                   aria-label={`${dateStr}${hasActivity ? " — has journal entries" : ""}`}
                   aria-pressed={isSelected}
                   className={cn(
@@ -272,21 +279,36 @@ export function JournalSection() {
           <div className="space-y-4 border-t border-navy-700 pt-5">
             {/* Panel header */}
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold text-navy-100">
-                  {formatDisplayDate(selectedDate)}
-                </p>
-                <p className="mt-0.5 text-xs text-navy-500">
-                  {(() => {
-                    const a = activityMap?.get(selectedDate);
-                    const parts: string[] = [];
-                    if (a?.hasPremarket) parts.push("pre-market");
-                    if (a?.hasPostmarket) parts.push("post-market");
-                    if ((a?.tradeCount ?? 0) > 0)
-                      parts.push(`${a!.tradeCount} trade${a!.tradeCount === 1 ? "" : "s"}`);
-                    return parts.length > 0 ? parts.join(" · ") : "No entries yet";
-                  })()}
-                </p>
+              <div className="flex items-center gap-2">
+                {selectedPanel && (
+                  <button
+                    onClick={() => setSelectedPanel(null)}
+                    className="text-navy-500 transition-colors hover:text-navy-300"
+                    aria-label="Back to day overview"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                )}
+                <div>
+                  <p className="font-semibold text-navy-100">
+                    {formatDisplayDate(selectedDate)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-navy-500">
+                    {(() => {
+                      const a = activityMap?.get(selectedDate);
+                      const parts: string[] = [];
+                      if (a?.hasPremarket) parts.push("pre-market");
+                      if (a?.hasPostmarket) parts.push("post-market");
+                      if ((a?.tradeCount ?? 0) > 0)
+                        parts.push(
+                          `${a!.tradeCount} trade${a!.tradeCount === 1 ? "" : "s"}`
+                        );
+                      return parts.length > 0
+                        ? parts.join(" · ")
+                        : "No entries yet";
+                    })()}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setSelectedDate(null)}
@@ -297,12 +319,77 @@ export function JournalSection() {
               </button>
             </div>
 
-            {/* Section panels — vertical stack */}
-            <div className="space-y-4">
-              {/* Pre-Market */}
-              <PreMarketPanel date={selectedDate} />
+            {/* Two-panel chooser or selected panel */}
+            {selectedPanel === null ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* Pre-Market card */}
+                <button
+                  onClick={() => setSelectedPanel("premarket")}
+                  className="group rounded-xl border border-navy-700 bg-navy-800/60 p-5 text-left transition-all hover:border-gold-500/40 hover:bg-navy-800/80"
+                >
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold-500/15 transition-colors group-hover:bg-gold-500/25">
+                      <Sun className="h-4 w-4 text-gold-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-navy-100">
+                      Pre-Market Analysis
+                    </h3>
+                    {activityMap?.get(selectedDate)?.hasPremarket && (
+                      <span className="ml-auto shrink-0 rounded-full bg-gold-500/20 px-2 py-0.5 text-[10px] font-medium text-gold-400">
+                        Entry exists
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm leading-relaxed text-navy-500 transition-colors group-hover:text-navy-400">
+                    Timeframe screenshots, news events, and session analysis.
+                  </p>
+                  <div className="mt-3 flex items-center gap-1 text-xs font-medium text-gold-400/50 transition-colors group-hover:text-gold-400">
+                    Open
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </div>
+                </button>
 
-              {/* Post-Market */}
+                {/* Post-Market card */}
+                <button
+                  onClick={() => setSelectedPanel("postmarket")}
+                  className="group rounded-xl border border-navy-700 bg-navy-800/60 p-5 text-left transition-all hover:border-sky-500/30 hover:bg-navy-800/80"
+                >
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy-700/60 transition-colors group-hover:bg-sky-500/15">
+                      <BarChart2 className="h-4 w-4 text-navy-400 transition-colors group-hover:text-sky-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-navy-100">
+                      Post-Market Log
+                    </h3>
+                    {(() => {
+                      const a = activityMap?.get(selectedDate);
+                      const hasPost =
+                        a?.hasPostmarket || (a?.tradeCount ?? 0) > 0;
+                      if (!hasPost) return null;
+                      const label =
+                        (a?.tradeCount ?? 0) > 0
+                          ? `${a!.tradeCount} trade${a!.tradeCount === 1 ? "" : "s"}`
+                          : "Entry exists";
+                      return (
+                        <span className="ml-auto shrink-0 rounded-full bg-sky-500/20 px-2 py-0.5 text-[10px] font-medium text-sky-400">
+                          {label}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <p className="text-sm leading-relaxed text-navy-500 transition-colors group-hover:text-navy-400">
+                    Trade log, follow-up screenshots, and session review.
+                  </p>
+                  <div className="mt-3 flex items-center gap-1 text-xs font-medium text-sky-400/50 transition-colors group-hover:text-sky-400">
+                    Open
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </div>
+                </button>
+              </div>
+            ) : selectedPanel === "premarket" ? (
+              <PreMarketPanel date={selectedDate} />
+            ) : (
+              /* Post-market placeholder */
               <div className="rounded-xl border border-navy-700 bg-navy-800/60 p-5">
                 <div className="mb-3 flex items-center gap-2">
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy-700/60">
@@ -311,27 +398,14 @@ export function JournalSection() {
                   <h3 className="text-sm font-semibold text-navy-100">
                     Post-Market Log
                   </h3>
-                  {(() => {
-                    const a = activityMap?.get(selectedDate);
-                    const hasPost = a?.hasPostmarket || (a?.tradeCount ?? 0) > 0;
-                    if (!hasPost) return null;
-                    const label =
-                      (a?.tradeCount ?? 0) > 0
-                        ? `${a!.tradeCount} trade${a!.tradeCount === 1 ? "" : "s"}`
-                        : "Entry exists";
-                    return (
-                      <span className="ml-auto shrink-0 rounded-full bg-sky-500/20 px-2 py-0.5 text-[10px] font-medium text-sky-400">
-                        {label}
-                      </span>
-                    );
-                  })()}
                 </div>
                 <p className="text-sm leading-relaxed text-navy-500">
-                  Follow-up screenshots, trade log (pair, P&L, session, entry type),
-                  and post-market review for this day — coming in the next build step.
+                  Trade log (pair, P&L, session, entry type), follow-up
+                  screenshots, and post-market review — coming in the next build
+                  step.
                 </p>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
