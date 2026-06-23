@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ChevronDown,
+  ExternalLink,
   Loader2,
   Maximize2,
   Newspaper,
@@ -53,7 +54,6 @@ export function PreMarketPanel({ date }: { date: string }) {
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const tvWidgetRef = useRef<HTMLDivElement>(null);
   const [confirmRemoveTf, setConfirmRemoveTf] =
     useState<PremarketTimeframe | null>(null);
 
@@ -146,34 +146,6 @@ export function PreMarketPanel({ date }: { date: string }) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [dropdownOpen]);
-
-  // ── TradingView Economic Calendar widget ───────────────────────────────────
-  // Injects the TradingView embed script on mount; cleans up on unmount.
-  // TradingView reads widget config from the script element's innerHTML.
-  useEffect(() => {
-    const container = tvWidgetRef.current;
-    if (!container) return;
-    container.innerHTML = "";
-
-    const script = document.createElement("script");
-    script.src =
-      "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
-    script.type = "text/javascript";
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      colorTheme: "dark",
-      isTransparent: false,
-      width: "100%",
-      height: 450,
-      locale: "en",
-      importanceFilter: "1", // −1=low  0=medium  1=high-only
-    });
-    container.appendChild(script);
-
-    return () => {
-      container.innerHTML = "";
-    };
-  }, []);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -411,27 +383,29 @@ export function PreMarketPanel({ date }: { date: string }) {
           </h3>
         </div>
 
-        {/* ── High-impact news — TradingView Economic Calendar widget ──────
-             Provider: s3.tradingview.com  (embed-widget-events.js)
-             Script is injected by the tvWidgetRef useEffect above.
-             To swap provider or adjust filters, see docs/MAINTENANCE.md.  */}
+        {/* ── High-Impact News — link-out to Forex Factory ─────────────────
+             No embed. To change the destination URL, see docs/MAINTENANCE.md. */}
         <div className="overflow-hidden rounded-lg border border-navy-700">
           <div className="flex items-center gap-2 border-b border-navy-700 bg-navy-900/60 px-3 py-2">
             <Newspaper className="h-3.5 w-3.5 shrink-0 text-navy-500" />
             <p className="text-[11px] font-semibold uppercase tracking-wider text-navy-500">
               High-Impact News
             </p>
+          </div>
+          <div className="flex flex-col items-start gap-3 px-4 py-4">
+            <p className="text-xs text-navy-400">
+              Review today&apos;s high-impact economic events before the session.
+            </p>
             <a
-              href="https://www.tradingview.com"
+              href="https://www.forexfactory.com/calendar"
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-auto text-[10px] text-navy-700 transition-colors hover:text-navy-500"
+              className="flex items-center gap-1.5 rounded-lg bg-gold-500/15 px-4 py-2 text-sm font-semibold text-gold-400 ring-1 ring-gold-500/30 transition-colors hover:bg-gold-500/25 hover:text-gold-300"
             >
-              TradingView
+              Open today&apos;s high-impact calendar
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
           </div>
-          {/* height must match the height value (450) in the widget config above */}
-          <div ref={tvWidgetRef} className="h-[450px] w-full bg-navy-950" />
         </div>
 
         {/* ── Thoughts for the day? ───────────────────────────────────────── */}
