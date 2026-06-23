@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+/* ── Custom font ─────────────────────────────────────────────────────────────
+   Choco Cooky — primary display font for the dashboard.
+   font-weight range 100–900 tells the browser to use this file for all
+   weights (synthesising as needed) so it never falls back on weight grounds.
+   font-display: swap prevents invisible text during font load.
+   Fallback chain: Geist Sans (already loaded via next/font/google — handles
+   any glyph Choco Cooky lacks: numbers, symbols, punctuation) → OS sans-serif.
+   To add woff2 performance: place Chococooky.woff2 alongside the TTF in
+   public/fonts/ — the browser will prefer it automatically.
+─────────────────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Choco Cooky';
+  src: url('/fonts/Chococooky.woff2') format('woff2'),
+       url('/fonts/Chococooky.ttf')   format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ── Design tokens ──────────────────────────────────────────────────────────
    Mission-control palette: deep navy backgrounds, gold accents, clean whites.
    Tailwind v4 registers these via @theme so they're available as utility
@@ -37,8 +56,8 @@
   --color-surface-400: #9aa5b8;
   --color-surface-500: #6b7a96;
 
-  /* Typography */
-  --font-sans: var(--font-geist-sans);
+  /* Typography — Choco Cooky primary; Geist fallback for missing glyphs */
+  --font-sans: 'Choco Cooky', var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 
   /* Border radius */

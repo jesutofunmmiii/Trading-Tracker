@@ -19,8 +19,8 @@ seems necessary, ask first.
 ## Design language
 
 - Palette: **navy** (primary), **gold** (accent), **white** (surface), subtle grays
-- Clean modern sans-serif; generous spacing; calm, not flashy
-- "Mission control" feel — information-dense but legible
+- Primary font: **Choco Cooky** (`public/fonts/Chococooky.ttf` + `Chococooky.woff2`), registered via `@font-face` in `globals.css`. Fallback chain: Geist Sans → ui-sans-serif. Geist covers any glyph Choco Cooky lacks (numbers, symbols, punctuation).
+- Generous spacing; calm, not flashy; "Mission control" feel — information-dense but legible
 - Mobile-responsive throughout
 
 ## Code conventions
