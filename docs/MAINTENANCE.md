@@ -64,69 +64,81 @@ VALUES (9, 'New habit description');
 
 ## Economic calendar embed (High-Impact News block)
 
-**Location in code:** `src/components/sections/PreMarketPanel.tsx`, inside the `{/* High-impact news */}` block.
+**Location in code:** `src/components/sections/PreMarketPanel.tsx`, `tvWidgetRef` + the `useEffect` directly below the dropdown click-outside effect.
 
-**Current provider:** [Investing.com](https://www.investing.com) — embeddable calendar via `sslecal2.investing.com`.
+**Current provider:** [TradingView](https://www.tradingview.com) — `embed-widget-events.js` Economic Calendar widget.
 
-**Current embed URL:**
+> **Why TradingView instead of Investing.com?**
+> `sslecal2.investing.com` sets `X-Frame-Options: SAMEORIGIN`, which causes a blank white box
+> when embedded in a third-party domain. TradingView's widget is purpose-built for embedding
+> and does not have this restriction.
 
-```
-https://sslecal2.investing.com?importance=3&timeZone=37&calType=day&timeframe=day&lang=56
-```
+### How the embed works
 
-### URL parameter reference
+TradingView's widget is **not** a plain iframe src — it's a `<script>` tag that TradingView's CDN uses to inject an iframe itself. The React implementation:
 
-| Parameter | Current value | Meaning | How to change |
-|-----------|--------------|---------|---------------|
-| `importance` | `3` | Event impact filter: `1`=low, `2`=medium, `3`=high only | Change to `1,2,3` to show all impacts |
-| `timeZone` | `37` | Investing.com timezone ID for **Africa/Lagos (WAT, UTC+1)** | See timezone IDs below |
-| `calType` | `day` | View mode: `day` shows a single day | `week` for the full week |
-| `timeframe` | `day` | Same as calType; both are needed | Set to `week` together with `calType` |
-| `lang` | `56` | Display language (56 = English/US) | Other lang IDs on Investing.com widget builder |
+1. A `<div ref={tvWidgetRef}>` is rendered in the JSX.
+2. A `useEffect` (mount-only `[]`) creates a `<script>` element, sets `innerHTML` to the JSON config, and appends it to that div.
+3. TradingView's script runs, creates an iframe inside the div, and renders the calendar.
+4. The `useEffect` cleanup empties the div when the component unmounts.
 
-**Common Investing.com timezone IDs:**
+### Config parameters
 
-| Timezone | ID |
-|----------|----|
-| UTC | `0` |
-| Africa/Lagos (WAT, UTC+1) | `37` |
-| Europe/London (GMT/BST) | `4` |
-| America/New_York (ET) | `8` |
-| Europe/Berlin (CET/CEST) | `72` |
+The config is the JSON object passed as `script.innerHTML` in the `useEffect`:
 
-To find any other timezone ID, use Investing.com's widget builder at `https://www.investing.com/webmaster-tools/economic-calendar`, configure the timezone, and inspect the generated iframe `src`.
+| Key | Current value | Meaning | How to change |
+|-----|--------------|---------|---------------|
+| `colorTheme` | `"dark"` | Widget colour theme | `"light"` for a light theme |
+| `isTransparent` | `false` | Widget background | `true` to use the container's background colour |
+| `width` | `"100%"` | Widget width | Fixed pixel value e.g. `"800"` |
+| `height` | `450` | Widget height in pixels | Any integer — **also update `h-[450px]` on the `<div>`** |
+| `locale` | `"en"` | Display language | Any TradingView locale string |
+| `importanceFilter` | `"1"` | Impact filter: `-1`=low `0`=medium `1`=high | `"-1,0,1"` to show all; `"0,1"` for medium+high |
+
+### Timezone
+
+TradingView's economic calendar widget displays events in the **browser's local timezone** — there is no server-side timezone override in the widget config. Since the app is used in Nigeria (WAT = UTC+1), the browser timezone is already correct and no extra config is needed.
+
+If you need to force a specific timezone regardless of the viewer's browser, you would need to switch to a provider that accepts an explicit timezone parameter (e.g. Investing.com's official JS widget — see "Swapping provider" below).
 
 ### Changing the height
 
-The iframe height is set in the Tailwind class `h-[480px]` on the `<iframe>` element. Adjust to taste — `h-[600px]` shows more events without scrolling.
+Two places must stay in sync:
 
-### Adding a currency/country filter
+1. The `height` value in the JSON config inside the `useEffect` (e.g. `height: 450`)
+2. The Tailwind class on the `<div>`: `h-[450px]`
 
-Append a `countries` query parameter with comma-separated Investing.com country IDs:
-
-```
-&countries=5,22,32,72,26,36,43
-```
-
-Common IDs: `5`=US, `22`=UK, `32`=EU, `72`=Japan, `26`=Germany, `36`=Australia, `43`=Canada.
+Change both to the same value. `600` shows roughly a full day without internal scrolling.
 
 ### Swapping to a different provider
 
-To replace Investing.com with another embed:
+#### Option A — Investing.com official JS widget (supports explicit timezone)
 
-1. Obtain the new provider's iframe URL (FXStreet, MyFXBook, TradingEconomics, etc.).
-2. In `PreMarketPanel.tsx`, replace the `src` attribute on the `<iframe>`.
-3. Adjust `h-[480px]` if the new widget renders at a different natural height.
-4. Update the attribution link (the `<a>` tag below the header icon).
-5. Update this section of MAINTENANCE.md to reflect the new provider and its parameters.
+Investing.com also provides a script-based embed (not a raw iframe) through their widget builder at `https://www.investing.com/webmaster-tools/economic-calendar`. The generated code creates an `InvestingEconomicCalendar_Widget` instance. To use it in React:
 
-If the new provider uses a JavaScript/script-tag embed rather than a plain iframe, you will need to extract or construct a direct iframe URL from their widget builder, or use a `dangerouslySetInnerHTML` wrapper component — avoid the latter if possible.
+1. Replace the `useEffect` body with logic that loads `https://widget.investing.com/static/economic-calendar/index.js` and calls `new window.InvestingEconomicCalendar_Widget({...})` after the script loads.
+2. Config accepts `timezone: "37"` for Africa/Lagos (WAT, UTC+1) — this is a real timezone override.
+3. Update the attribution `<a>` link to point to `https://www.investing.com`.
 
-**If a Content-Security-Policy is added to the project later**, add the provider's domain to `frame-src`. For the current Investing.com embed:
+#### Option B — plain iframe provider
+
+If you find a provider that supplies a direct iframe URL (no scripting needed) and does **not** set `X-Frame-Options: SAMEORIGIN`, replace the `useEffect` + `<div>` approach with a plain `<iframe src="...">`. Remove the `tvWidgetRef` ref and both `useEffect` blocks.
+
+#### General checklist for any swap
+
+1. Update the `useEffect` body (or replace with `<iframe>` as appropriate).
+2. Adjust `h-[450px]` on the container `<div>` to match the new widget's height.
+3. Update the attribution `<a>` href and text to the new provider.
+4. Update this section of MAINTENANCE.md.
+
+**If a Content-Security-Policy is added to the project later**, add the provider's domains:
 
 ```js
-// next.config.ts headers()
-"Content-Security-Policy": "... frame-src 'self' https://sslecal2.investing.com ..."
+// next.config.ts — headers()
+"Content-Security-Policy": [
+  "script-src 'self' https://s3.tradingview.com",         // TradingView widget script
+  "frame-src  'self' https://s3.tradingview.com https://www.tradingview.com", // iframe it injects
+].join("; ")
 ```
 
 ---
@@ -139,4 +151,4 @@ Images are uploaded manually to the `vision-board` Supabase Storage bucket. The 
 
 ## Economic Calendar tab
 
-The standalone Economic Calendar tab (separate from the pre-market news block) is a full-page iframe embed. The embed source is currently set to the same Investing.com widget. To swap it, find the `EconomicCalendarSection` component in `src/components/sections/` and update the `src` there. See the parameter reference above.
+The standalone Economic Calendar tab (separate from the pre-market news block) is a full-page embed. To swap the provider there, find the `EconomicCalendarSection` component in `src/components/sections/` and apply the same approach described above.
