@@ -29,16 +29,23 @@ export interface Profile {
 export interface PremarketEntry {
   id: string;
   user_id: string;
-  entry_date: string;           // YYYY-MM-DD (browser local date)
-  market_conditions: string | null;
-  key_levels: string | null;
-  planned_trades: string | null;
-  risk_reward_ratio: string | null;
-  notes: string | null;
-  attachment_url: string | null;
-  attachment_name: string | null;
+  entry_date: string; // YYYY-MM-DD
+  news_events: unknown | null; // JSONB — shape TBD when data source wired
   created_at: string;
   updated_at: string;
+}
+
+export type PremarketTimeframe = "Weekly" | "Daily" | "4H" | "2H" | "1H";
+
+export interface PremarketScreenshot {
+  id: string;
+  user_id: string;
+  premarket_entry_id: string;
+  timeframe: PremarketTimeframe;
+  storage_path: string;
+  notes: string | null;
+  display_order: number;
+  created_at: string;
 }
 
 export interface RoutineItem {

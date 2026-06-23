@@ -13,7 +13,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Sun,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,6 +20,7 @@ import {
   journalKeys,
   fetchJournalActivityForMonth,
 } from "@/lib/queries/journal";
+import { PreMarketPanel } from "@/components/sections/PreMarketPanel";
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -297,28 +297,10 @@ export function JournalSection() {
               </button>
             </div>
 
-            {/* Section panels */}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Section panels — vertical stack */}
+            <div className="space-y-4">
               {/* Pre-Market */}
-              <div className="rounded-xl border border-navy-700 bg-navy-800/60 p-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold-500/15">
-                    <Sun className="h-4 w-4 text-gold-400" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-navy-100">
-                    Pre-Market Analysis
-                  </h3>
-                  {activityMap?.get(selectedDate)?.hasPremarket && (
-                    <span className="ml-auto shrink-0 rounded-full bg-gold-500/20 px-2 py-0.5 text-[10px] font-medium text-gold-400">
-                      Entry exists
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm leading-relaxed text-navy-500">
-                  Timeframe screenshots (Weekly → 1H), high-impact news events, and
-                  session analysis for this day — coming in the next build step.
-                </p>
-              </div>
+              <PreMarketPanel date={selectedDate} />
 
               {/* Post-Market */}
               <div className="rounded-xl border border-navy-700 bg-navy-800/60 p-5">
