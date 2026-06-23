@@ -382,18 +382,32 @@ export function PreMarketPanel({ date }: { date: string }) {
           </h3>
         </div>
 
-        {/* ── High-impact news placeholder ───────────────────────────────── */}
-        <div className="rounded-lg border border-dashed border-navy-700 bg-navy-900/30 p-4">
-          <div className="flex items-center gap-2 text-navy-600">
-            <Newspaper className="h-4 w-4 shrink-0" />
-            <p className="text-xs font-semibold uppercase tracking-wider">
+        {/* ── High-impact news — Investing.com economic calendar embed ──────
+             Provider: sslecal2.investing.com
+             To swap provider or adjust filters, see docs/MAINTENANCE.md.        */}
+        <div className="overflow-hidden rounded-lg border border-navy-700">
+          <div className="flex items-center gap-2 border-b border-navy-700 bg-navy-900/60 px-3 py-2">
+            <Newspaper className="h-3.5 w-3.5 shrink-0 text-navy-500" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-navy-500">
               High-Impact News
             </p>
+            <a
+              href="https://www.investing.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto text-[10px] text-navy-700 transition-colors hover:text-navy-500"
+            >
+              Investing.com
+            </a>
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-navy-700">
-            Scheduled high-impact news events for this session will appear here.
-            Data source will be wired in a later step.
-          </p>
+          {/* iframe fills 100% width; 480px height fits roughly a full trading day.
+              loading="lazy" defers fetch until the section is opened. */}
+          <iframe
+            src="https://sslecal2.investing.com?importance=3&timeZone=37&calType=day&timeframe=day&lang=56"
+            title="High-impact economic calendar (WAT / UTC+1)"
+            className="block h-[480px] w-full border-0 bg-navy-950"
+            loading="lazy"
+          />
         </div>
 
         {/* ── Thoughts for the day? ───────────────────────────────────────── */}
