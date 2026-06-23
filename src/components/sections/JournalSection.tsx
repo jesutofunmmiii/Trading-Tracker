@@ -22,6 +22,7 @@ import {
   fetchJournalActivityForMonth,
 } from "@/lib/queries/journal";
 import { PreMarketPanel } from "@/components/sections/PreMarketPanel";
+import { PostMarketPanel } from "@/components/sections/PostMarketPanel";
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -389,22 +390,7 @@ export function JournalSection() {
             ) : selectedPanel === "premarket" ? (
               <PreMarketPanel date={selectedDate} />
             ) : (
-              /* Post-market placeholder */
-              <div className="rounded-xl border border-navy-700 bg-navy-800/60 p-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy-700/60">
-                    <BarChart2 className="h-4 w-4 text-navy-400" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-navy-100">
-                    Post-Market Log
-                  </h3>
-                </div>
-                <p className="text-sm leading-relaxed text-navy-500">
-                  Trade log (pair, P&L, session, entry type), follow-up
-                  screenshots, and post-market review — coming in the next build
-                  step.
-                </p>
-              </div>
+              <PostMarketPanel date={selectedDate} />
             )}
           </div>
         )}

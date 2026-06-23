@@ -49,6 +49,27 @@ export interface PremarketScreenshot {
   created_at: string;
 }
 
+export interface PostmarketEntry {
+  id: string;
+  user_id: string;
+  entry_date: string; // YYYY-MM-DD
+  premarket_entry_id: string | null;
+  followup_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PostmarketScreenshot {
+  id: string;
+  user_id: string;
+  postmarket_entry_id: string;
+  timeframe: PremarketTimeframe;
+  storage_path: string;
+  notes: string | null;
+  display_order: number;
+  created_at: string;
+}
+
 export interface RoutineItem {
   id: string;
   order_index: number;
